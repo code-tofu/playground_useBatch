@@ -1,4 +1,4 @@
-package code.tofu.useBatch.batch;
+package code.tofu.useBatch.tasklet;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -86,6 +86,19 @@ public class TaskletJobConfig {
         },transactionManager).build();
     }
 
+    @Bean
+    public Step listeningTasklet(JobRepository jobRepository, PlatformTransactionManager transactionManager){
+        return new StepBuilder("listeningTasklet",jobRepository).tasklet(new Tasklet() {
+            @Override
+            public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+                log.info("[TaskletJob] Execute listeningTasklet");
+                return RepeatStatus.FINISHED;
+            }
+        },transactionManager).listener(getMockListener()).build();
+    }
+
+
+
 
 
     @Bean
@@ -93,21 +106,30 @@ public class TaskletJobConfig {
         return new JobBuilder("taskletJob",jobRepository)
                 .start(repeatableTasklet(jobRepository,transactionManager))
                 //next step
-                .next(failableTasklet(jobRepository,transactionManager))
-                //handle failed scenario
-                .on("FAILED").to(backupTasklet(jobRepository,transactionManager))
-                //implement custom decider
-                .on("COMPLETED").to(getExampledecider())
-                    .on("EXCEPTIONED")
-                    .to(exceptionedTasklet(jobRepository,transactionManager)).end()
+                .next(listeningTasklet(jobRepository,transactionManager))
+                .on("ODD").fail()
+                //if failed then retry as end, NOOP	All steps already completed or no steps configured for this job.
+                .on("EVEN")
+                    .to(failableTasklet(jobRepository,transactionManager))
+                    //handle failed scenario
+                    .on("FAILED").to(backupTasklet(jobRepository,transactionManager))
+                    //implement custom decider
+                    .on("COMPLETED").to(getExceptiondecider())
+                        .on("EXCEPTIONED")
+                        .to(exceptionedTasklet(jobRepository,transactionManager)).end()
                 .build();
 
         //NOTES: "backup" step will mark job as completed (i.e. cannot retry)
     }
 
     @Bean
-    public JobExecutionDecider getExampledecider(){
-        return new ExampleDecider();
+    public JobExecutionDecider getExceptiondecider(){
+        return new ExceptionDecider();
+    }
+
+    @Bean
+    public MockListener getMockListener(){
+        return new MockListener();
     }
 
 }
