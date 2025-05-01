@@ -4,7 +4,7 @@
 - [ ] Implement Job Logic
     - [x] conditional flow
     - [x] decider 
-    - [ ] external/internal flows for resuse
+    - [x] external/internal flows
     - [ ] (nested) job steps
     - [ ] split flows
     - [ ] parallel flows
