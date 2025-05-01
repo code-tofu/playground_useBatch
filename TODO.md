@@ -2,6 +2,7 @@
 - [ ] Using Chunk Context and Step Context
 - [x] implement listeners
 - [ ] Implement Job Logic
+    - [x] batch statuses
     - [x] conditional flow
     - [x] decider 
     - [x] external/internal flows

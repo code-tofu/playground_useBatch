@@ -24,10 +24,34 @@ import java.util.Date;
 public class TaskletJobConfig {
 
     @Autowired
+    JobRepository jobRepository;
+
+    @Autowired
+    PlatformTransactionManager transactionManager;
+
+    @Autowired
     TaskletFlowConfig externalTasketFlow;
 
     @Bean
-    public Step repeatableTasklet(JobRepository jobRepository, PlatformTransactionManager transactionManager){
+    public Job taskletJob(){
+        return new JobBuilder("taskletJob",jobRepository)
+                .start(repeatableTasklet())
+                //next step
+                .next(listeningTasklet())
+                .on("ODD")
+                .fail()
+//                    .end()
+                //if failed then retry as end, NOOP	All steps already completed or no steps configured for this job.
+                .on("EVEN")
+                .to(externalTasketFlow.getTaskletFlow())
+                .end()
+                .build();
+
+        //NOTES: "backup" step will mark job as completed (i.e. cannot retry)
+    }
+
+    @Bean
+    public Step repeatableTasklet(){
 
         //NOTE: changing job name or tasklet CLI params name/value allows job to re-run (job parameters different)
         return new StepBuilder("repeatableTasklet",jobRepository).tasklet(new Tasklet() {
@@ -46,7 +70,7 @@ public class TaskletJobConfig {
     }
 
     @Bean
-    public Step listeningTasklet(JobRepository jobRepository, PlatformTransactionManager transactionManager){
+    public Step listeningTasklet(){
         return new StepBuilder("listeningTasklet",jobRepository).tasklet(new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -57,24 +81,14 @@ public class TaskletJobConfig {
     }
 
     @Bean
-    public Job taskletJob(JobRepository jobRepository, PlatformTransactionManager transactionManager){
-        return new JobBuilder("taskletJob",jobRepository)
-                .start(repeatableTasklet(jobRepository,transactionManager))
-                //next step
-                .next(listeningTasklet(jobRepository,transactionManager))
-                .on("ODD").fail()
-                //if failed then retry as end, NOOP	All steps already completed or no steps configured for this job.
-                .on("EVEN")
-                    .to(externalTasketFlow.getTaskletFlow())
-                .end()
-                .build();
-
-        //NOTES: "backup" step will mark job as completed (i.e. cannot retry)
+    public MockListener getMockListener(){
+        return new MockListener();
     }
 
     @Bean
-    public MockListener getMockListener(){
-        return new MockListener();
+    public Step nestedTaskletJobStep(){
+        return new StepBuilder("nestedTaskletJobStep", jobRepository)
+                .job(taskletJob()).build();
     }
 
 

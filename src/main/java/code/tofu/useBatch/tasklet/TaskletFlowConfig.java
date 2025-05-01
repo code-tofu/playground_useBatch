@@ -34,18 +34,20 @@ public class TaskletFlowConfig {
     public Flow getTaskletFlow(){
         log.info("[TaskletFlow] start externalTaskletFlow");
         return new FlowBuilder<SimpleFlow>("taskletFlow")
-                .start(failableTasklet(jobRepository,transactionManager))
+                .start(failableTasklet())
                 //handle failed scenario
-                .on("FAILED").to(backupTasklet(jobRepository,transactionManager))
+                .on("COMPLETED")
+                    .to(getExceptiondecider())
+                .from(failableTasklet()).on("FAILED")
+                    .to(backupTasklet())
                 //implement custom decider
-                .on("COMPLETED").to(getExceptiondecider())
-                .on("EXCEPTIONED")
-                .to(exceptionedTasklet(jobRepository,transactionManager))
+                .from(failableTasklet()).on("EXCEPTIONED")
+                    .to(exceptionedTasklet())
                 .build();
     }
 
     @Bean
-    public Step failableTasklet(JobRepository jobRepository, PlatformTransactionManager transactionManager){
+    public Step failableTasklet(){
         return new StepBuilder("failableTasklet",jobRepository).tasklet(new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -65,7 +67,7 @@ public class TaskletFlowConfig {
     }
 
     @Bean
-    public Step backupTasklet(JobRepository jobRepository, PlatformTransactionManager transactionManager){
+    public Step backupTasklet(){
         return new StepBuilder("backupTasklet",jobRepository).tasklet(new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -77,7 +79,7 @@ public class TaskletFlowConfig {
     }
 
     @Bean
-    public Step exceptionedTasklet(JobRepository jobRepository, PlatformTransactionManager transactionManager){
+    public Step exceptionedTasklet(){
         return new StepBuilder("exceptionedTasklet",jobRepository).tasklet(new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {

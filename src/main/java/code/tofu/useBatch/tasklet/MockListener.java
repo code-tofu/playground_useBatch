@@ -14,7 +14,7 @@ public class MockListener implements StepExecutionListener {
             log.info("[MockListener] After Step is Even");
             return new ExitStatus("EVEN");
         } else {
-            log.info("[MockListener] After Step is Odd");
+            log.info("[MockListener] After Step is Odd: FAILING JOB");
             return new ExitStatus("ODD");
         }
     }
