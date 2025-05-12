@@ -47,13 +47,17 @@ public class TaskletJobConfig {
                 .end()
                 .build();
 
-        //NOTES: "backup" step will mark job as completed (i.e. cannot retry)
+    }
+
+    @Bean
+    public Step nestedTaskletJobStep(){ //use the tasklet Job as a step instead
+        return new StepBuilder("nestedTaskletJobStep", jobRepository)
+                .job(taskletJob()).build();
     }
 
     @Bean
     public Step repeatableTasklet(){
 
-        //NOTE: changing job name or tasklet CLI params name/value allows job to re-run (job parameters different)
         return new StepBuilder("repeatableTasklet",jobRepository).tasklet(new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -64,7 +68,7 @@ public class TaskletJobConfig {
                     return RepeatStatus.CONTINUABLE;
                 }
                 log.info("[TaskletJob] repeatableTasklet Finished");
-                return RepeatStatus.FINISHED; //NOTE: will be repeated until finished.
+                return RepeatStatus.FINISHED;
             }
         },transactionManager).build();
     }
@@ -84,12 +88,5 @@ public class TaskletJobConfig {
     public MockListener getMockListener(){
         return new MockListener();
     }
-
-    @Bean
-    public Step nestedTaskletJobStep(){
-        return new StepBuilder("nestedTaskletJobStep", jobRepository)
-                .job(taskletJob()).build();
-    }
-
 
 }

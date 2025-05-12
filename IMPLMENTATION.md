@@ -4,19 +4,15 @@
 - Flyway
 - sql drivers
 - Spring Batch
-- Spring Data JPA
+- Spring Data JPA/JDBC
 
 ## Configure Spring
 - enable batch processing (for older versions)
-- create jobRepository and initialise job params tables
+- create jobRepository, transactionManager and initialise job params tables (spring.batch.jdbc.initialize-schema)
+- Create entity tables using flyway
 
-Configure job repo and jdbc properties
-Create spring batch tables using Spring.batch.initialize-schema=always
-Configure Beans
-
-define entities and models
-job
-steps
-job flows, flow logic
-chunk beans: read/process/output
+## Configure Job and Steps Beans
+- define job and step beans, flow logic
+- define entities and models
+- define chunk beans: reader/processor/writer
 

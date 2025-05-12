@@ -22,9 +22,10 @@ public class MainJobConfiguration {
     TaskletJobConfig taskletJobConfig;
 
     @Bean
-    public Job mainJob(){
-        return new JobBuilder("mainJob",jobRepository)
+    public Job mainTaskletJob(){
+        return new JobBuilder("mainTaskletJob",jobRepository)
                 .start(taskletJobConfig.nestedTaskletJobStep())
                 .build();
     }
+
 }

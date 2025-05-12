@@ -23,10 +23,23 @@ https://docs.spring.io/spring-batch/reference/repeat.html
 > A RepeatStatus enumeration conveys information to the caller of the repeat operations about whether any work remains.
 > In the preceding example, we return RepeatStatus.CONTINUABLE, to show that 
 
-
+Transitions
 - next 
 - on - if equals
 - from - else if
 - to - then
 
 > Duplicate step detected in execution of job. If either step fails, both will be executed again on restart
+
+- a tasklet will be repeated until the status is finished
+- changing job name or tasklet CLI params name/value allows job to re-run (job parameters different)
+- "backup" step will mark job as completed (i.e. cannot retry)
+
+- jackson requires getter/setters
+- parameterize the chunk so that the fluent chain can infer the types
+- `writer.setMethodName("save")` will save/or update for same primary key
+
+- ? Normalising a database
+
+
+

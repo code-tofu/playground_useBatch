@@ -37,7 +37,7 @@ public class TaskletFlowConfig {
                 .start(failableTasklet())
                 //handle failed scenario
                 .on("COMPLETED")
-                    .to(getExceptiondecider())
+                    .to(getExceptionDecider())
                 .from(failableTasklet()).on("FAILED")
                     .to(backupTasklet())
                 //implement custom decider
@@ -92,7 +92,7 @@ public class TaskletFlowConfig {
 
 
     @Bean
-    public JobExecutionDecider getExceptiondecider(){
+    public JobExecutionDecider getExceptionDecider(){
         return new ExceptionDecider();
     }
 

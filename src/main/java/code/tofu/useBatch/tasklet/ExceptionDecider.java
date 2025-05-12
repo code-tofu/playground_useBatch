@@ -15,7 +15,10 @@ public class ExceptionDecider implements JobExecutionDecider {
     @Override
     public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
         log.info("[ExceptionDecider] Deciding...");
-        if(new Date().getTime() % 2 == 0) return new FlowExecutionStatus("EXCEPTIONED");
+        if(new Date().getTime() % 2 == 0) {
+            log.error("Exception in JobExecutionDecider");
+            return new FlowExecutionStatus("EXCEPTIONED");
+        }
         return FlowExecutionStatus.COMPLETED;
     }
 }
