@@ -7,7 +7,7 @@ import org.springframework.batch.item.ItemProcessor;
 
 import java.util.List;
 
-public class PurchaseOrderProcessor implements ItemProcessor<FlatFileInput, PurchaseOrder> {
+public class PurchaseOrderInputProcessor implements ItemProcessor<FlatFileInput, PurchaseOrder> {
 
     @Override
     public PurchaseOrder process(FlatFileInput input) {
@@ -17,7 +17,7 @@ public class PurchaseOrderProcessor implements ItemProcessor<FlatFileInput, Purc
                 .vendorId(input.getFileFlatFileVendorDetails().getVendorId())
                 .totalCost(tabulateTotalCost(input.getLineItems()))
                 .build();
-    }
+    } //return null if filters
 
     public Double tabulateTotalCost( List<FlatFileLineItem> inputItems){
         Double orderTotalCost = 0.0;

@@ -3,7 +3,6 @@ package code.tofu.useBatch.chunk;
 import code.tofu.useBatch.chunk.entity.PurchaseOrder;
 import code.tofu.useBatch.chunk.model.FlatFileInput;
 import code.tofu.useBatch.chunk.repository.PurchaseOrderRepository;
-import code.tofu.useBatch.tasklet.TaskletFlowConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -11,10 +10,14 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.support.CompositeItemProcessor;
+import org.springframework.batch.item.support.builder.CompositeItemProcessorBuilder;
+import org.springframework.batch.item.validator.BeanValidatingItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,13 +27,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 @Slf4j
 @Configuration
-public class ChunkJobConfig {
+public class InputChunkJobConfig {
 
-    @Value("${chunk.flatfile.headers}")
-    String[] flatfileHeaders;
+    @Value("${chunk.input-file.headers}")
+    String[] inputFileHeaders;
 
-    @Value("${chunk.flatfile.file-location}")
-    String fileLocation;
+    @Value("${chunk.input-file.location}")
+    String inputFileLocation;
 
     @Autowired
     JobRepository jobRepository;
@@ -39,26 +42,30 @@ public class ChunkJobConfig {
     PlatformTransactionManager transactionManager;
 
     @Autowired
-    TaskletFlowConfig externalTasketFlow;
-
-    @Autowired
     PurchaseOrderRepository purchaseOrderRepository;
 
     @Bean
-    public Job chunkJob(JobRepository jobRepository, PlatformTransactionManager transactionManager){
-        return new JobBuilder("chunkJob",jobRepository)
+    public Job inputChunkJob(){
+        return new JobBuilder("inputChunkJob",jobRepository)
                 .start(chunkReadFromFileIntoDBStep())
                 .incrementer(new RunIdIncrementer())
                 .build();
     }
 
     @Bean
+    public Step nestedInputChunkJobStep(){ //use the tasklet Job as a step instead
+        return new StepBuilder("nestedInputChunkJobStep", jobRepository)
+                .job(inputChunkJob()).build();
+    }
+
+
+    @Bean
     public Step chunkReadFromFileIntoDBStep(){
-        return new StepBuilder("csvImportIntoDB",jobRepository)
+        return new StepBuilder("readFromFileIntoDB",jobRepository)
                 //specify the type parameter so that the fluent chain can infer
                 .<FlatFileInput, PurchaseOrder>chunk(5,transactionManager) //<Input, Output>
                 .reader(flatFileInputItemReader())
-                .processor(orderProcessor())
+                .processor(purchaseOrderInputProcessor())
                 .writer(processedTransactionWriter())
                 .build();
     }
@@ -66,7 +73,7 @@ public class ChunkJobConfig {
     @Bean
     public FlatFileItemReader<FlatFileInput> flatFileInputItemReader() {
         FlatFileItemReader<FlatFileInput> itemReader = new FlatFileItemReader<>();
-        itemReader.setResource(new FileSystemResource(fileLocation));
+        itemReader.setResource(new FileSystemResource(inputFileLocation));
         itemReader.setName("csvOrderReader");
         itemReader.setLinesToSkip(1); //headerRow
 
@@ -74,7 +81,7 @@ public class ChunkJobConfig {
         DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
         tokenizer.setDelimiter(",");
         tokenizer.setStrict(false);
-        tokenizer.setNames(flatfileHeaders);
+        tokenizer.setNames(inputFileHeaders);
 
         inputLineMapper.setLineTokenizer(tokenizer);
         inputLineMapper.setFieldSetMapper(new FlatFileInputFieldSetMapper());
@@ -85,8 +92,16 @@ public class ChunkJobConfig {
     }
 
     @Bean
-    public PurchaseOrderProcessor orderProcessor() {
-        return new PurchaseOrderProcessor();
+    public CompositeItemProcessor purchaseOrderInputProcessor() {
+        return new CompositeItemProcessorBuilder()
+                .delegates(new PurchaseOrderInputProcessor(),inputValidationProcessor()).build();
+    }
+
+    @Bean
+    public ItemProcessor<FlatFileInput, PurchaseOrder> inputValidationProcessor() {
+        BeanValidatingItemProcessor itemProcessor = new BeanValidatingItemProcessor<>();
+        itemProcessor.setFilter(true); //do not throw exception
+        return itemProcessor;
     }
 
 

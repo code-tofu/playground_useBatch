@@ -41,5 +41,10 @@ Transitions
 
 - ? Normalising a database
 
+- without order by, if a job restarts it is not given that the read order from database will be the same
+- how does flat file reader/writer remember where is the cursor?
+- named query
+
+- specify the column explicitly or jpa will auto infer based on camel case to snake case when using ddl-auto
 
 
