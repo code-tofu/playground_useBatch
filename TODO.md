@@ -1,3 +1,11 @@
+# TO ADMIN
+- [/] Delete use batch archive
+  - [ ] Review https://github.com/code-tofu/archive_useBatch for multitable batch
+- [ ] Review todos
+- [ ] Revise use batch and annotate notes 
+- [ ] Merge archive_useBatch on Surface
+- [ ] Review Zilant-ledger for long polling for TWS job scheduler
+# TO CODE
 - [ ] Add flyway
 - [x] Using Tasklets
 - [ ] Using Chunk Context and Step Context
@@ -21,22 +29,26 @@
     - [ ] batch status control using end fail stop transitions
     - [ ] restarting the job that is failed or stopped at a particular step
     - [ ] different batch job and step exit statuses
-- [ ] Review Zilant-ledger for long polling for TWS job scheduler
 - [ ] Generate batch data using python
-- [ ] Review https://www.linkedin.com/learning/spring-spring-batch
-  - p ] runjob.sh
+- [ ] add headers to DelimitedLineAggregator
+- [ ] Reading/Writing multiple JPA tables using composite writer
+- [ ] Multi thread reading from database using paging item reader
+- [ ] Retries
+- [ ] Using Quartz to trigger jobs
+# TO VIDEO
+- [ ] The full guide to Batch processing with Spring boot | Full guide | Ali https://www.youtube.com/watch?v=X48mMxEMYps
+- [ ] Let's code: Spring Batch, part 1 Coffee + Software https://www.youtube.com/watch?v=rz1l2fpZVJQ&list=PL_HF_bzvfUwZsRO-FsjSXBU6uVOYWwGE-
 - [x] Review alibou  https://github.com/ali-bouali/spring-batch-demo/tree/main/src/main/java/com/alibou/batch
   - [ ] Parallel processing
   - [ ] Controller as Job Launcher
-- [ ] add headers to DelimitedLineAggregator
+- [ ] Review https://www.linkedin.com/learning/spring-spring-batch runjob.sh
 
+
+# JDBC
 - ddl-auto types
 - hibernate.format_sql
 - initialize-schema=embedded
-
-
-Multi thread reading from database using paging item reader
 Use jdbctemplate - https://docs.spring.io/spring-batch/reference/readers-and-writers/database.html#JdbcCursorItemReader
 Named parameters
-Retries
-Using Quartz
+
+
